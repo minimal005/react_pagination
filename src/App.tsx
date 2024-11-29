@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import React, { useState } from 'react';
 import './App.css';
 import { getNumbers } from './utils';
@@ -5,7 +6,14 @@ import { Pagination } from './components/Pagination';
 import cn from 'classnames';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const items: string[] = getNumbers(1, 42).map(n => `Item ${n}`);
+interface Item {
+  id: number;
+  title: string;
+}
+const items: Item[] = getNumbers(1, 42).map(n => ({
+  id: n,
+  title: `Item ${n}`,
+}));
 
 interface Props {
   currentPage: number;
@@ -20,13 +28,14 @@ const visibleItems = (props: Props) => {
 };
 
 export const App: React.FC = () => {
-  const [total] = useState<string[]>(items);
+  const [total] = useState<Item[]>(items);
   const [visiblePages, setVisiblePages] = useState<number>(9);
   const [perPage, setPerPage] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const totalPages: number[] = getNumbers(1, Math.ceil(total.length / perPage));
   const showPages = visibleItems({ currentPage, perPage });
+
   const onPageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -45,7 +54,8 @@ export const App: React.FC = () => {
 
       <p className="lead" data-cy="info">
         Page {currentPage} (items {(currentPage - 1) * perPage + 1} -{' '}
-        {currentPage * perPage} of {items.length})
+        {visiblePages === currentPage ? total.length : currentPage * perPage} of{' '}
+        {items.length})
       </p>
 
       <div className="form-group row">
@@ -75,7 +85,6 @@ export const App: React.FC = () => {
         </label>
       </div>
 
-      {/* Move this markup to Pagination */}
       <ul className="pagination">
         <li className={cn('page-item', { disabled: currentPage === 1 })}>
           <a
@@ -117,11 +126,9 @@ export const App: React.FC = () => {
       </ul>
       <ul>
         {showPages.map(item => {
-          const key = item.split(' ').at(-1);
-
           return (
-            <li key={key} data-cy="item">
-              {item}
+            <li key={item.id} data-cy="item">
+              {item.title}
             </li>
           );
         })}
