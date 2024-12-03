@@ -5,14 +5,13 @@ import { getNumbers } from './utils';
 import { Pagination } from './components/Pagination';
 import cn from 'classnames';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Item {
   id: number;
   title: string;
 }
-const items: Item[] = getNumbers(1, 42).map(n => ({
-  id: n,
-  title: `Item ${n}`,
+const items: Item[] = getNumbers(1, 42).map(digitForId => ({
+  id: digitForId,
+  title: `Item ${digitForId}`,
 }));
 
 interface Props {
@@ -29,18 +28,18 @@ const visibleItems = (props: Props) => {
 
 export const App: React.FC = () => {
   const [total] = useState<Item[]>(items);
-  const [visiblePages, setVisiblePages] = useState<number>(9);
-  const [perPage, setPerPage] = useState<number>(5);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [visiblePages, setVisiblePages] = useState(9);
+  const [perPage, setPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages: number[] = getNumbers(1, Math.ceil(total.length / perPage));
   const showPages = visibleItems({ currentPage, perPage });
 
-  const onPageChange = (page: number) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const onNextPage = (sign: '+' | '-') => {
+  const handleNextPage = (sign: '+' | '-') => {
     if (sign === '+') {
       setCurrentPage(currentPage + 1);
     } else {
@@ -48,14 +47,19 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setPerPage(+event.target.value);
+    setCurrentPage(1);
+    setVisiblePages(() => Math.ceil(items.length / +event.target.value));
+  };
+
   return (
     <div className="container">
       <h1>Items with Pagination</h1>
 
       <p className="lead" data-cy="info">
-        Page {currentPage} (items {(currentPage - 1) * perPage + 1} -{' '}
-        {visiblePages === currentPage ? total.length : currentPage * perPage} of{' '}
-        {items.length})
+        {`Page ${currentPage} (items ${(currentPage - 1) * perPage + 1} - ${visiblePages === currentPage ? total.length : currentPage * perPage} of
+        ${items.length})`}
       </p>
 
       <div className="form-group row">
@@ -65,13 +69,7 @@ export const App: React.FC = () => {
             id="perPageSelector"
             className="form-control"
             value={perPage}
-            onChange={event => {
-              setPerPage(+event.target.value);
-              setCurrentPage(1);
-              setVisiblePages(() =>
-                Math.ceil(items.length / +event.target.value),
-              );
-            }}
+            onChange={handleSelectChange}
           >
             <option value="3">3</option>
             <option value="5">5</option>
@@ -91,9 +89,9 @@ export const App: React.FC = () => {
             data-cy="prevLink"
             className="page-link"
             href="#prev"
-            aria-disabled={currentPage === 1 ? 'true' : 'false'}
+            aria-disabled={currentPage === 1}
             onClick={() => {
-              onNextPage('-');
+              handleNextPage('-');
             }}
           >
             «
@@ -104,7 +102,7 @@ export const App: React.FC = () => {
             key={page}
             page={page}
             currentPage={currentPage}
-            onPageChange={onPageChange}
+            onPageChange={handlePageChange}
           />
         ))}
 
@@ -117,8 +115,8 @@ export const App: React.FC = () => {
             data-cy="nextLink"
             className="page-link"
             href="#next"
-            onClick={() => onNextPage('+')}
-            aria-disabled={currentPage === visiblePages ? 'true' : 'false'}
+            onClick={() => handleNextPage('+')}
+            aria-disabled={currentPage === visiblePages}
           >
             »
           </a>
